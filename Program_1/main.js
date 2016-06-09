@@ -18,7 +18,7 @@ var mainState = {
         this.player = game.add.sprite(game.width/2, game.height/2, 'player');
         this.player.anchor.setTo(0.5, 0.5);
         game.physics.arcade.enable(this.player);
-        this.player.body.gravity.y = 500;
+        this.player.body.gravity.y = 1000;
 
         this.createWorld();
 
@@ -50,17 +50,17 @@ var mainState = {
 
     movePlayer: function() {
         if (this.cursor.left.isDown) {
-            this.player.body.velocity.x = -200;
+            this.player.body.velocity.x = -300;
         }
         else if (this.cursor.right.isDown) {
-            this.player.body.velocity.x = 200;
+            this.player.body.velocity.x = 300;
         }
         else {
             this.player.body.velocity.x = 0;
         }
 
         if (this.cursor.up.isDown && this.player.body.touching.down) {
-            this.player.body.velocity.y = -320;
+            this.player.body.velocity.y = -480;
         }      
     },
 
@@ -97,8 +97,8 @@ var mainState = {
 
         enemy.anchor.setTo(0.5, 1);
         enemy.reset(game.width/2, 0);
-        enemy.body.gravity.y = 500;
-        enemy.body.velocity.x = 100 * game.rnd.pick([-1, 1]);
+        enemy.body.gravity.y = 1000;
+        enemy.body.velocity.x = 150 * game.rnd.pick([-1, 1]);
         enemy.body.bounce.x = 1;
         enemy.checkWorldBounds = true;
         enemy.outOfBoundsKill = true;
