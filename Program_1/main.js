@@ -22,7 +22,8 @@ var mainState = {
 
         this.createWorld();
 
-        this.coin = game.add.sprite(60, 140, 'coin');
+        this.coin = game.add.sprite(-40, -40, 'coin');
+		this.updateCoinPosition();
         game.physics.arcade.enable(this.coin); 
         this.coin.anchor.setTo(0.5, 0.5);
 		//this.coin.scale.setTo(2, 2)
@@ -51,17 +52,17 @@ var mainState = {
 
     movePlayer: function() {
         if (this.cursor.left.isDown) {
-            this.player.body.velocity.x = -300;
+            this.player.body.velocity.x = -320;
         }
         else if (this.cursor.right.isDown) {
-            this.player.body.velocity.x = 300;
+            this.player.body.velocity.x = 320;
         }
         else {
             this.player.body.velocity.x = 0;
         }
 
         if (this.cursor.up.isDown && this.player.body.touching.down) {
-            this.player.body.velocity.y = -480;
+            this.player.body.velocity.y = -560;
         }      
     },
 
@@ -74,9 +75,14 @@ var mainState = {
 
     updateCoinPosition: function() {
         var coinPosition = [
-            {x: 140, y: 60}, {x: 360, y: 60}, 
-            {x: 60, y: 140}, {x: 440, y: 140}, 
-            {x: 130, y: 300}, {x: 370, y: 300} 
+			{x: 160, y: 60}, {x: 480, y: 60},
+			{x: 160, y: 180}, {x: 480, y: 180},
+			{x: 90, y: 120}, {x: 550, y: 120},
+			{x: 160, y: 300}, {x: 480, y: 300},
+			{x: 160, y: 420}, {x: 480, y: 420},
+			{x: 90, y: 360}, {x: 550, y: 360}, 
+            {x: 220, y: 240}, {x: 420, y: 240},
+            {x: 320, y: 420}, {x: 320, y: 80}
         ];
 
         for (var i = 0; i < coinPosition.length; i++) {
@@ -109,26 +115,30 @@ var mainState = {
     createWorld: function() {
         this.walls = game.add.group();
         this.walls.enableBody = true;
-		// Here you can apply the same properties to every wall.
-		// http://stackoverflow.com/a/29505980
-		this.walls.setAll('anchor.x', 0.5);
-		this.walls.setAll('anchor.y', 0);	
-
-        game.add.sprite(10, 0, 'wallV', 0, this.walls); 
-        game.add.sprite(game.width-10, 0, 'wallV', 0, this.walls); 
-        game.add.sprite(10, 0, 'wallH', 0, this.walls); 
-        game.add.sprite(game.width*.75, 0, 'wallH', 0, this.walls);
-        game.add.sprite(0, game.height-20, 'wallH', 0, this.walls); 
-        game.add.sprite(game.width-20, game.height-20, 'wallH', 0, this.walls); 
-        game.add.sprite(game.width*.25, game.height/2-10, 'wallH', 0, this.walls); 
-        game.add.sprite(game.width*.75, game.height/2-10, 'wallH', 0, this.walls); 
-        var middleTop = game.add.sprite(game.width/2, game.height*.25, 'wallH', 0, this.walls);
-        middleTop.scale.setTo(1.5, 1);
-        var middleBottom = game.add.sprite(game.width/2, game.height*.75, 'wallH', 0, this.walls);
-        middleBottom.scale.setTo(1.5, 1);
+		
+		var left = game.add.sprite(0, 0, 'wall', 0, this.walls);
+		left.scale.setTo(1, 24);
+        var right = game.add.sprite(game.width-20, 0, 'wall', 0, this.walls);
+		right.scale.setTo(1, 24);
+        var topLeft = game.add.sprite(0, 0, 'wall', 0, this.walls);
+		topLeft.scale.setTo(12, 1);
+        var topRight = game.add.sprite(game.width-240, 0, 'wall', 0, this.walls);
+		topRight.scale.setTo(12, 1);
+        var bottomLeft = game.add.sprite(0, game.height-20, 'wall', 0, this.walls);
+		bottomLeft.scale.setTo(12, 1);
+        var bottomRight = game.add.sprite(game.width-240, game.height-20, 'wall', 0, this.walls);
+		bottomRight.scale.setTo(12, 1);
+        var middleLeft = game.add.sprite(0, game.height/2-10, 'wall', 0, this.walls);
+		middleLeft.scale.setTo(8, 1);
+        var middleRight = game.add.sprite(game.width*.75, game.height/2-10, 'wall', 0, this.walls);
+		middleRight.scale.setTo(8, 1);
+        var middleTop = game.add.sprite(game.width*.25, game.height*.25-10, 'wall', 0, this.walls);
+        middleTop.scale.setTo(16, 1);
+        var middleBottom = game.add.sprite(game.width*.25, game.height*.75-10, 'wall', 0, this.walls);
+        middleBottom.scale.setTo(16, 1);
 
         this.walls.setAll('body.immovable', true);
-		console.log(this.walls.children)
+		//console.log(this.walls.children)
     },
 
     playerDie: function() {
