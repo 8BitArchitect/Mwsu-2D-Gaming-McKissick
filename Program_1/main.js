@@ -8,6 +8,7 @@ var mainState = {
     },
 
     create: function() { 
+		//console.log(game.rnd.integerInRange);
         game.stage.backgroundColor = '#3498db';
         game.physics.startSystem(Phaser.Physics.ARCADE);
         game.renderer.renderSession.roundPixels = true;
@@ -30,14 +31,20 @@ var mainState = {
 
         this.scoreLabel = game.add.text(30, 30, 'score: 0', { font: '18px Arial', fill: '#ffffff' });
         this.score = 0;
+		
+		this.deathsLabel = game.add.text(530, 430, 'deaths: 0', { font: '18px Arial', fill: '#ffffff' });
+        this.deaths = 0;
 
         this.enemies = game.add.group();
         this.enemies.enableBody = true;
         this.enemies.createMultiple(10, 'enemy');
         game.time.events.loop(2200, this.addEnemy, this);
+		this.ticks = 0;
     },
 
     update: function() {
+		
+		this.tics++;
         game.physics.arcade.collide(this.player, this.walls);
         game.physics.arcade.collide(this.enemies, this.walls);
         game.physics.arcade.overlap(this.player, this.coin, this.takeCoin, null, this);
@@ -75,14 +82,14 @@ var mainState = {
 
     updateCoinPosition: function() {
         var coinPosition = [
-			{x: 160, y: 60}, {x: 480, y: 60},
+			{x: 160, y:  60}, {x: 480, y:  60},
 			{x: 160, y: 180}, {x: 480, y: 180},
-			{x: 90, y: 120}, {x: 550, y: 120},
+			{x: 90,  y: 120}, {x: 550, y: 120},
 			{x: 160, y: 300}, {x: 480, y: 300},
 			{x: 160, y: 420}, {x: 480, y: 420},
-			{x: 90, y: 360}, {x: 550, y: 360}, 
+			{x: 90,  y: 360}, {x: 550, y: 360}, 
             {x: 220, y: 240}, {x: 420, y: 240},
-            {x: 320, y: 420}, {x: 320, y: 80}
+            {x: 320, y: 420}, {x: 320, y:  80}
         ];
 
         for (var i = 0; i < coinPosition.length; i++) {
@@ -138,11 +145,22 @@ var mainState = {
         middleBottom.scale.setTo(16, 1);
 
         this.walls.setAll('body.immovable', true);
-		//console.log(this.walls.children)
     },
 
     playerDie: function() {
-        game.state.start('main');
+		this.deaths++;
+		this.deathsLabel.text = 'deaths: ' + this.deaths;
+        if(!this.player.inWorld) 
+		{
+			do
+			{
+				this.player.reset(game.rnd.integerInRange(20,620),game.rnd.integerInRange(20,460));
+			} while(game.physics.arcade.overlap(this.player, this.walls));
+		}
+		else
+		{
+			
+		}
     },
 };
 
