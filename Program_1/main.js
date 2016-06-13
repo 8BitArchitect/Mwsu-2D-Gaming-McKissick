@@ -40,6 +40,9 @@ var mainState = {
 		this.timeLabel = game.add.text(420, 30, 'time left: 120', { font: '18px Arial', fill: '#ffffff' });
 		this.startTime = game.time.now;
 		this.timeLeft = 120;
+		
+		this.playerInvuln = false;
+		this.invulnTil = 0;
 
         this.enemies = game.add.group();
         this.enemies.enableBody = true;
@@ -54,11 +57,17 @@ var mainState = {
         game.physics.arcade.collide(this.enemies, this.walls);
         game.physics.arcade.overlap(this.player, this.coin, this.takeCoin, null, this);
         game.physics.arcade.overlap(this.player, this.enemies, this.playerDie, null, this);
+		
+		if (this.playerInvuln && game.time.now > this.invulnTil)
+		{
+			this.player.tint = 0xFFFFFF;
+			this.playerInvuln = false;
+		}
 
-        this.movePlayer(); 
+        this.movePlayer();
 
         if (!this.player.inWorld) {
-            this.playerDie();
+            this.playerDie(this.player);
         }
 		
 		this.timeLeft=(120-Math.floor((game.time.now-this.startTime)/1000));
@@ -158,17 +167,25 @@ var mainState = {
     },
 
     playerDie: function(player, enemy) {
-		if (enemy)
+		if(this.playerInvuln == false)
 		{
-			var angle = game.math.angleBetweenPointsY(player.body.center, enemy.body.center);
-			player.body.velocity.x -= Math.sin(angle) * 1080;
-			player.body.velocity.y -= Math.cos(angle) * 1080;
-			enemy.animations.play('die');
-			enemy.kill();
-			//enemy.destroy();
+			if (enemy)
+			{
+				var angle = game.math.angleBetweenPointsY(player.body.center, enemy.body.center);
+				player.body.velocity.x -= Math.sin(angle) * 1080;
+				player.body.velocity.y -= Math.cos(angle) * 1080;
+				enemy.animations.play('die');
+				enemy.kill();
+				//enemy.destroy();
+			}
+			this.playerInvuln = true;
+			this.invulnTil = game.time.now + 2500;
+			player.tint = 0xFF0000;
+			this.deaths++;
+			this.deathsLabel.text = 'deaths: ' + this.deaths;
+			this.score = Math.max(0,this.score - 10);
+			this.scoreLabel.text = 'score: ' + this.score;
 		}
-		this.deaths++;
-		this.deathsLabel.text = 'deaths: ' + this.deaths;
         if(!this.player.inWorld) 
 		{
 			this.player.reset(game.rnd.integerInRange(40,600),game.rnd.integerInRange(40,440));
