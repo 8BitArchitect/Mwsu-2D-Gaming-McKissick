@@ -8,7 +8,6 @@ var mainState = {
     },
 
     create: function() { 
-		//console.log(game.rnd.integerInRange);
         game.stage.backgroundColor = '#3498db';
         game.physics.startSystem(Phaser.Physics.ARCADE);
         game.renderer.renderSession.roundPixels = true;
@@ -20,6 +19,9 @@ var mainState = {
 		//this.player.scale.setTo(2, 2)
         game.physics.arcade.enable(this.player);
         this.player.body.gravity.y = 1000;
+		this.player.body.bounce.y = .1;
+		this.player.body.bounce.x = .1;
+		this.player.body.drag.x = 1000;
 
         this.createWorld();
 
@@ -34,17 +36,20 @@ var mainState = {
 		
 		this.deathsLabel = game.add.text(530, 430, 'deaths: 0', { font: '18px Arial', fill: '#ffffff' });
         this.deaths = 0;
+		
+		this.timeLabel = game.add.text(420, 30, 'time left: 120', { font: '18px Arial', fill: '#ffffff' });
+		this.startTime = game.time.now;
+		this.timeLeft = 120;
 
         this.enemies = game.add.group();
         this.enemies.enableBody = true;
         this.enemies.createMultiple(10, 'enemy');
         game.time.events.loop(2200, this.addEnemy, this);
-		this.ticks = 0;
+		
     },
 
     update: function() {
 		
-		this.tics++;
         game.physics.arcade.collide(this.player, this.walls);
         game.physics.arcade.collide(this.enemies, this.walls);
         game.physics.arcade.overlap(this.player, this.coin, this.takeCoin, null, this);
@@ -55,17 +60,21 @@ var mainState = {
         if (!this.player.inWorld) {
             this.playerDie();
         }
+		
+		this.timeLeft=(120-Math.floor((game.time.now-this.startTime)/1000));
+		this.timeLabel.text = 'time left: ' + this.timeLeft;
+		if (this.timeLeft<0)
+		{
+			game.state.start('main');
+		}
     },
 
     movePlayer: function() {
-        if (this.cursor.left.isDown) {
-            this.player.body.velocity.x = -320;
+        if (this.cursor.left.isDown && this.player.body.velocity.x > -360) {
+            this.player.body.velocity.x = Math.max(-360,this.player.body.velocity.x-60);
         }
-        else if (this.cursor.right.isDown) {
-            this.player.body.velocity.x = 320;
-        }
-        else {
-            this.player.body.velocity.x = 0;
+        else if (this.cursor.right.isDown && this.player.body.velocity.x < 360) {
+            this.player.body.velocity.x = Math.min(360,this.player.body.velocity.x+60);
         }
 
         if (this.cursor.up.isDown && this.player.body.touching.down) {
@@ -109,11 +118,12 @@ var mainState = {
             return;
         }
 
-        enemy.anchor.setTo(0.5, 1);
+        enemy.anchor.setTo(0.5, 0.5);
         enemy.reset(game.width/2, 0);
         enemy.body.gravity.y = 1000;
         enemy.body.velocity.x = 150 * game.rnd.pick([-1, 1]);
         enemy.body.bounce.x = 1;
+		enemy.body.bounce.y = .5;
         enemy.checkWorldBounds = true;
         enemy.outOfBoundsKill = true;
 		//enemy.scale.setTo(2, 2);
@@ -147,19 +157,21 @@ var mainState = {
         this.walls.setAll('body.immovable', true);
     },
 
-    playerDie: function() {
+    playerDie: function(player, enemy) {
+		if (enemy)
+		{
+			var angle = game.math.angleBetweenPointsY(player.body.center, enemy.body.center);
+			player.body.velocity.x -= Math.sin(angle) * 1080;
+			player.body.velocity.y -= Math.cos(angle) * 1080;
+			enemy.animations.play('die');
+			enemy.kill();
+			//enemy.destroy();
+		}
 		this.deaths++;
 		this.deathsLabel.text = 'deaths: ' + this.deaths;
         if(!this.player.inWorld) 
 		{
-			do
-			{
-				this.player.reset(game.rnd.integerInRange(20,620),game.rnd.integerInRange(20,460));
-			} while(game.physics.arcade.overlap(this.player, this.walls));
-		}
-		else
-		{
-			
+			this.player.reset(game.rnd.integerInRange(40,600),game.rnd.integerInRange(40,440));
 		}
     },
 };
