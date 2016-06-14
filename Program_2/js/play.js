@@ -11,6 +11,19 @@ var playState = {
 		this.player.body.bounce.y = .1;
 		this.player.body.bounce.x = .1;
 		this.player.body.drag.x = 1000;
+		
+		this.jumpSound = game.add.audio('jump');
+		this.jumpSound.volume = .33;
+		this.coinSound = game.add.audio('coin');
+		this.coinSound.volume = .33;
+		this.deadSound = game.add.audio('dead');
+		this.deadSound.volume = .33;
+		
+		// Add and start the music in the 'create' function of the play.js file
+		// Because we want to play the music when the play state starts
+		this.music = game.add.audio('music'); // Add the music
+		this.music.loop = true; // Make it loop
+		this.music.play(); // Start the music
 
         this.createWorld();
 
@@ -40,6 +53,25 @@ var playState = {
         this.enemies.enableBody = true;
         this.enemies.createMultiple(10, 'enemy');
         game.time.events.loop(2200, this.addEnemy, this);
+		
+		// Create the emitter with 15 particles. We don't need to set the x y
+		// Since we don't know where to do the explosion yet
+		this.emitter = game.add.emitter(0, 0, 15);
+
+		// Set the 'pixel' image for the particles
+		this.emitter.makeParticles('pixel');
+
+		// Set the x and y speed of the particles between -150 and 150
+		// Speed will be randomly picked between -150 and 150 for each particle
+		this.emitter.setYSpeed(-150, 150);
+		this.emitter.setXSpeed(-150, 150);
+
+		// Scale the particles from 2 time their size to 0 in 800ms
+		// Parameters are: startX, endX, startY, endY, duration
+		this.emitter.setScale(2, 0, 2, 0, 800);
+
+		// Use no gravity
+		this.emitter.gravity = 0;
     },
 
     update: function() {
@@ -67,12 +99,11 @@ var playState = {
 		//update game timer
 		this.timeLeft=(120-Math.floor((game.time.now-this.startTime)/1000));
 		this.timeLabel.text = 'time left: ' + this.timeLeft;
-		/*
 		if (this.timeLeft<0)
 		{
-			game.state.start('main');
+			this.music.stop();
+			game.state.start('menu');
 		}
-		*/
     },
 
     movePlayer: function() {
@@ -86,13 +117,20 @@ var playState = {
         }
 		//make player jump
         if (this.cursor.up.isDown && this.player.body.touching.down) {
+			this.jumpSound.play();
             this.player.body.velocity.y = -560;
         }      
     },
 
     takeCoin: function(player, coin) {
-        this.score += 5;
-        this.scoreLabel.text = 'score: ' + this.score;
+		this.coinSound.play();
+		// Scale the coin to 0 to make it invisible
+		this.coin.scale.setTo(0, 0);
+		// Grow the coin back to its original scale in 300ms
+		game.add.tween(this.coin.scale).to({x: 1, y: 1}, 300).start();
+		game.add.tween(this.player.scale).to({x: 1.3, y: 1.3}, 100).yoyo(true).start();
+        game.global.score += 5;
+        this.scoreLabel.text = 'score: ' + game.global.score;
 
         this.updateCoinPosition();
     },
@@ -172,6 +210,7 @@ var playState = {
     },
 
     playerDie: function(player, enemy) {
+		var playSound = false;
 		if(this.playerInvuln == false)
 		{
 			//if the player fell out of the world ignore this section
@@ -193,8 +232,9 @@ var playState = {
 			//add a death and decrement score (to a min of 0)
 			this.deaths++;
 			this.deathsLabel.text = 'deaths: ' + this.deaths;
-			this.score = Math.max(0,this.score - 10);
-			this.scoreLabel.text = 'score: ' + this.score;
+			game.global.score = Math.max(0,game.global.score - 10);
+			this.scoreLabel.text = 'score: ' + game.global.score;
+			playSound = true;
 		}
 		//reset the player's position if he fell out of the world.
         if(!this.player.inWorld) 
@@ -213,6 +253,16 @@ var playState = {
 					inWall = true;
 				}
 			}while (inWall);
+			playSound = true;
+		}
+		if(playSound)
+		{
+			// Set the position of the emitter on top of the player
+			this.emitter.x = this.player.x;
+			this.emitter.y = this.player.y;
+			// Start the emitter by exploding 15 particles that will live 800ms
+			this.emitter.start(true, 800, null, 15);
+			this.deadSound.play();
 		}
     },
 };
