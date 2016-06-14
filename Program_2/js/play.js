@@ -24,7 +24,7 @@ var playState = {
         this.createWorld();
 
 		//set default properties for the coin
-        this.coin = game.add.sprite(-40, -40, 'coin');
+        this.coin = game.add.sprite(-40, -40, 'ticket');
 		this.updateCoinPosition();
         game.physics.arcade.enable(this.coin); 
         this.coin.anchor.setTo(0.5, 0.5);
@@ -124,7 +124,7 @@ var playState = {
 		// Grow the coin back to its original scale in 300ms
 		game.add.tween(this.coin.scale).to({x: 1, y: 1}, 300).start();
 		game.add.tween(this.player.scale).to({x: 1.3, y: 1.3}, 100).yoyo(true).start();
-        game.global.score += 5;
+        game.global.score += this.coin.value;
         this.scoreLabel.text = 'score: ' + game.global.score;
 
         this.updateCoinPosition();
@@ -142,6 +142,13 @@ var playState = {
             {x: 220, y: 240}, {x: 420, y: 240},
             {x: 320, y: 420}, {x: 320, y:  80}
         ];
+		
+		var coinWeights = [0,0,0,0,0,0,1,1,1,1,2,2,2,3,3,4]
+		
+		var coinValues = [1, 3, 5, 10, 25];
+		
+		this.coin.frame = game.rnd.pick(coinWeights);
+		this.coin.value = coinValues[this.coin.frame];
 
 		//??? removes current coin position from list ???
         for (var i = 0; i < coinPosition.length; i++) {
