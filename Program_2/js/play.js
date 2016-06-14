@@ -71,8 +71,6 @@ var playState = {
     },
 
     update: function() {
-		console.log(game.global.menuMusic.isPlaying);
-		console.log(game.global.gameMusic.isPlaying);
 		
 		//set which objects/groups can collide with each other
         game.physics.arcade.collide(this.player, this.walls);
@@ -166,6 +164,8 @@ var playState = {
         }
 
 		//set default properties for enemy
+		enemy.animations.add('move', [1, 2, 1, 3], 8, true);
+		enemy.animations.play('move');
         enemy.anchor.setTo(0.5, 0.5);
         enemy.reset(game.width/2, 0);
         enemy.body.gravity.y = 1000;
