@@ -1,7 +1,9 @@
 var game = new Phaser.Game(640, 480, Phaser.AUTO, 'gameDiv');
 
 game.global = {
-    score: 0
+    score: 0,
+	menuMusic: null,
+	gameMusic: null
 };
 
 game.state.add('boot', bootState);

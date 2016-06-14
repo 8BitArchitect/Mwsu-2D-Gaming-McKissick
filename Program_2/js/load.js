@@ -24,10 +24,17 @@ var loadState = {
 		game.load.audio('dead', ['assets/dead.ogg', 'assets/dead.mp3']);
 		
 		// Load the music in 2 different formats in the load.js file
-		game.load.audio('music', ['assets/music.ogg', 'assets/music.mp3']);
+		game.load.audio('menuMusic', ['assets/Menu.ogg', 'assets/Menu.mp3']);
+		game.load.audio('gameMusic', ['assets/Game.ogg', 'assets/Game.mp3']);
     },
 
-    create: function() { 
+    create: function() {
+		game.global.menuMusic = game.add.audio('menuMusic', .5, true), // Add the music
+		game.global.gameMusic = game.add.audio('gameMusic', .01, true), // Add the music
+		
+		game.global.gameMusic.play();
+		game.global.menuMusic.play();
+		
         game.state.start('menu');
     }
 };

@@ -1,6 +1,8 @@
 var playState = {
 
     create: function() { 
+		game.global.menuMusic.fadeTo(2000, .01);
+		game.global.gameMusic.fadeTo(1000, .5);
         this.cursor = game.input.keyboard.createCursorKeys();
         
 		//set default properties for the player
@@ -18,12 +20,6 @@ var playState = {
 		this.coinSound.volume = .33;
 		this.deadSound = game.add.audio('dead');
 		this.deadSound.volume = .33;
-		
-		// Add and start the music in the 'create' function of the play.js file
-		// Because we want to play the music when the play state starts
-		this.music = game.add.audio('music'); // Add the music
-		this.music.loop = true; // Make it loop
-		this.music.play(); // Start the music
 
         this.createWorld();
 
@@ -75,6 +71,8 @@ var playState = {
     },
 
     update: function() {
+		console.log(game.global.menuMusic.isPlaying);
+		console.log(game.global.gameMusic.isPlaying);
 		
 		//set which objects/groups can collide with each other
         game.physics.arcade.collide(this.player, this.walls);
@@ -101,7 +99,6 @@ var playState = {
 		this.timeLabel.text = 'time left: ' + this.timeLeft;
 		if (this.timeLeft<0)
 		{
-			this.music.stop();
 			game.state.start('menu');
 		}
     },

@@ -2,6 +2,9 @@ var menuState = {
 
     create: function() { 
         game.add.image(0, 0, 'background');
+		
+		game.global.menuMusic.fadeTo(1000, .5);
+		game.global.gameMusic.fadeTo(2000, .01);
 
         // Changed the y position to -50 so we don't see the label
 		var nameLabel = game.add.text(game.width/2, -50, 'Super Coin Box', { font: '50px Arial', fill: '#ffffff' });
