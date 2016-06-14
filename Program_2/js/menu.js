@@ -18,7 +18,7 @@ var menuState = {
 		if (!localStorage.getItem('bestScore')) {
 			// Then set the best score to 0
 			localStorage.setItem('bestScore', 0);
-		//}
+		}
 		// If the score is higher than the best score
 		if (game.global.score > localStorage.getItem('bestScore')) {
 			// Then update the best score
