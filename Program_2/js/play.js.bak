@@ -67,12 +67,10 @@ var playState = {
 		//update game timer
 		this.timeLeft=(120-Math.floor((game.time.now-this.startTime)/1000));
 		this.timeLabel.text = 'time left: ' + this.timeLeft;
-		/*
 		if (this.timeLeft<0)
 		{
 			game.state.start('main');
 		}
-		*/
     },
 
     movePlayer: function() {
