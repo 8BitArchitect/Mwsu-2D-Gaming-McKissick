@@ -51,6 +51,33 @@ var menuState = {
         upKey.onDown.add(this.start, this);
     },
 	
+	update: function() {
+		if (!game.global.gameMusic.isPlaying) {
+			game.global.gameMusic.play();
+			game.global.menuMusic.play();
+		}
+		this.syncMusic(game.global.gameMusic, game.global.menuMusic);
+	},
+	
+	syncMusic: function(song1, song2) {
+		if (game.math.fuzzyGreaterThan(song1.curentTime, song2.currentTime, 50))
+		{
+			song1.pause();
+		}
+		else if (game.math.fuzzyGreaterThan(song2.curentTime, song1.currentTime, 50))
+		{
+			song2.pause();
+		}
+		if (!song1.isPlaying && game.math.fuzzyEqual(song2.curentTime, song1.currentTime, 50))
+		{
+			song1.play();
+		}
+		if (!song2.isPlaying && game.math.fuzzyEqual(song2.curentTime, song1.currentTime, 50))
+		{
+			song2.play();
+		}
+	},
+	
 	// Function called when the 'muteButton' is pressed
 	toggleSound: function() {
 		// Switch the variable from true to false, or false to true

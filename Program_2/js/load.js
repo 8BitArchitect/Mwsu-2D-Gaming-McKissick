@@ -33,8 +33,8 @@ var loadState = {
 		game.global.menuMusic = game.add.audio('menuMusic', .5, true), // Add the music
 		game.global.gameMusic = game.add.audio('gameMusic', .01, true), // Add the music
 		
-		game.global.gameMusic.play();
-		game.global.menuMusic.play();
+		//game.global.gameMusic.play();
+		//game.global.menuMusic.play();
 		
         game.state.start('menu');
     }

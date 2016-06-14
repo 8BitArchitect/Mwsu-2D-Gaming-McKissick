@@ -164,7 +164,7 @@ var playState = {
         }
 
 		//set default properties for enemy
-		enemy.animations.add('move', [1, 2, 1, 3], 8, true);
+		enemy.animations.add('move', [0, 1, 0, 2], 8, true);
 		enemy.animations.play('move');
         enemy.anchor.setTo(0.5, 0.5);
         enemy.reset(game.width/2, 0);
