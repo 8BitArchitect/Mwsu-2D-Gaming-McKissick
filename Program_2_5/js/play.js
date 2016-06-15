@@ -7,15 +7,29 @@ var playState = {
         
 		//set default properties for the player
         this.player = game.add.sprite(game.width/2, game.height/2, 'player');
+		this.player.animations.add('none', [0], 0, true);
+		this.player.animations.add('right', [1], 0, true);
+		this.player.animations.add('left', [4], 0, true);
+		this.player.animations.add('walkRight', [1, 2, 1, 3], 8, true);
+		this.player.animations.add('walkLeft', [4, 5, 4, 6], 8, true);
+		this.player.animations.add('jumpUp', [11], 0, true);
+		this.player.animations.add('jumpRight', [9], 0, true);
+		this.player.animations.add('jumpLeft', [7], 0, true);
+		this.player.animations.add('fallDown', [12], 0, true);
+		this.player.animations.add('fallRight', [10], 0, true);
+		this.player.animations.add('fallLeft', [8], 0, true);
+		this.playerFacing = 'none';
         this.player.anchor.setTo(0.5, 0.5);
         game.physics.arcade.enable(this.player);
         this.player.body.gravity.y = 1000;
 		this.player.body.bounce.y = .1;
 		this.player.body.bounce.x = .1;
 		this.player.body.drag.x = 1000;
+		this.player.body.setSize(12, 32);
 		
 		this.jumpSound = game.add.audio('jump');
 		this.jumpSound.volume = .33;
+		this.jumpSound.allowMultiple = true;
 		this.coinSound = game.add.audio('coin');
 		this.coinSound.volume = .33;
 		this.deadSound = game.add.audio('dead');
@@ -40,17 +54,18 @@ var playState = {
 		
 		this.timeLabel = game.add.text(420, 30, 'time left: 120', { font: '18px Arial', fill: '#ffffff' });
 		this.startTime = game.time.now;
-		this.timeLeft = 120;
+		this.timeLeft = 600;
 		
 		//vars for player invuln state
 		this.playerInvuln = false;
 		this.invulnTil = 0;
+		this.pauseTil = 0;
 
 		//initialize enemies
         this.enemies = game.add.group();
         this.enemies.enableBody = true;
         this.enemies.createMultiple(10, 'enemy');
-        game.time.events.loop(2200, this.addEnemy, this);
+        game.time.events.loop(3600, this.addEnemy, this);
 		
 		// Create the emitter with 15 particles. We don't need to set the x y
 		// Since we don't know where to do the explosion yet
@@ -77,6 +92,7 @@ var playState = {
 		//set which objects/groups can collide with each other
         game.physics.arcade.collide(this.player, this.walls);
         game.physics.arcade.collide(this.enemies, this.walls);
+		game.physics.arcade.collide(this.enemies, this.enemies);
         game.physics.arcade.overlap(this.player, this.coin, this.takeCoin, null, this);
         game.physics.arcade.overlap(this.player, this.enemies, this.playerDie, null, this);
 		
@@ -86,8 +102,14 @@ var playState = {
 			this.player.tint = 0xFFFFFF;
 			this.playerInvuln = false;
 		}
+		
+		if (game.time.now > this.pauseTil)
+		{
+			game.physics.arcade.isPaused = false;
+		}
 
-        this.movePlayer(); 
+        this.movePlayer();
+		this.animatePlayer();
 
 		//check if player has left the world
         if (!this.player.inWorld) {
@@ -95,10 +117,11 @@ var playState = {
         }
 		
 		//Enemy AI
-		this.enemies.forEachAlive(this.enemyAI, this, this.player)
+		this.enemies.forEachAlive(this.enemyAI, this, this.player);
+		this.enemies.forEachAlive(this.enemyAnimate, this)
 		
 		//update game timer
-		this.timeLeft=(120-Math.floor((game.time.now-this.startTime)/1000));
+		this.timeLeft=(600-Math.floor((game.time.now-this.startTime)/1000));
 		this.timeLabel.text = 'time left: ' + this.timeLeft;
 		if (this.timeLeft<0)
 		{
@@ -110,20 +133,108 @@ var playState = {
 		//move player left
         if (this.cursor.left.isDown && this.player.body.velocity.x > -360) {
             this.player.body.velocity.x = Math.max(-360,this.player.body.velocity.x-60);
+			this.playerFacing = 'left';
+			console.log(this.cursor.left.duration)
         }
 		//move player right
         else if (this.cursor.right.isDown && this.player.body.velocity.x < 360) {
             this.player.body.velocity.x = Math.min(360,this.player.body.velocity.x+60);
+			this.playerFacing = 'right';
+			console.log(this.cursor.right.duration)
         }
 		//make player jump
         if (this.cursor.up.isDown && this.player.body.touching.down) {
-			this.jumpSound.play();
+			if (game.physics.arcade.isPaused == false)
+			{
+				this.jumpSound.play();
+			}
             this.player.body.velocity.y = -560;
         }      
     },
 	
+	animatePlayer: function() {
+		if (this.player.body.touching.down)
+		{
+			if (this.cursor.left.isDown)
+			{
+				this.player.animations.play('walkLeft');
+			}
+			else if (this.cursor.right.isDown)
+			{
+				this.player.animations.play('walkRight');
+			}
+			else
+			{
+				this.player.animations.play(this.playerFacing);
+			}
+		}
+		else
+		{
+			if (this.playerFacing == 'left')
+			{
+				if (this.player.body.velocity.y < 0)
+				{
+					this.player.animations.play('jumpLeft');
+				}
+				else
+				{
+					this.player.animations.play('fallLeft');
+				}
+			}
+			else if (this.playerFacing == 'right')
+			{
+				if (this.player.body.velocity.y < 0)
+				{
+					this.player.animations.play('jumpRight');
+				}
+				else
+				{
+					this.player.animations.play('fallRight');
+				}
+			}
+			else
+			{
+				if (this.player.body.velocity.y < 0)
+				{
+					this.player.animations.play('jumpUp');
+				}
+				else
+				{
+					this.player.animations.play('fallDown');
+				}
+			}
+		}
+	},
+	
 	enemyAI: function(enemy, player) {
-		
+		if (game.physics.arcade.distanceBetween(enemy, player) < 96 && this.playerInvuln == false)
+		{
+			enemy.body.velocity.x = Math.abs(enemy.body.velocity.x) * game.math.sign(player.body.x-enemy.body.x);
+			if (player.body.y < enemy.body.y && enemy.body.touching.down)
+			{
+				enemy.body.velocity.y = -360;
+				if (game.physics.arcade.isPaused == false)
+				{
+					this.jumpSound.play();
+				}
+			}
+		}	
+	},
+	
+	enemyAnimate(enemy)
+	{
+		if (enemy.body.touching.down && game.physics.arcade.isPaused == false)
+		{
+			enemy.animations.play('move');
+		}
+		else if (enemy.body.velocity.y <= -1)
+		{
+			enemy.animations.play('jump');
+		}
+		else
+		{
+			enemy.animations.play('fall');
+		}
 	},
 
     takeCoin: function(player, coin) {
@@ -168,7 +279,7 @@ var playState = {
 			this.coinWeights[4] += 1;
 			this.coin.frame = 0;
 		}
-		else 		if (coinRnd < sum[1] && sum[1])
+		else if (coinRnd < sum[1] && sum[1])
 		{
 			this.coinWeights[0] += 5;
 			this.coinWeights[1] -= 4;
@@ -177,7 +288,7 @@ var playState = {
 			this.coinWeights[4] += 1;
 			this.coin.frame = 1;
 		}
-		else 		if (coinRnd < sum[2] && sum[2])
+		else if (coinRnd < sum[2] && sum[2])
 		{
 			this.coinWeights[0] += 5;
 			this.coinWeights[1] += 4;
@@ -219,25 +330,30 @@ var playState = {
     },
 
     addEnemy: function() {
-		//picks the first dead enemy to spawn
-        var enemy = this.enemies.getFirstDead();
+		if (game.physics.arcade.isPaused == false)
+		{
+			//picks the first dead enemy to spawn
+			var enemy = this.enemies.getFirstDead();
 
-		//return if there are no dead enemies 
-        if (!enemy) {
-            return;
-        }
+			//return if there are no dead enemies 
+			if (!enemy) {
+				return;
+			}
 
-		//set default properties for enemy
-		enemy.animations.add('move', [0, 1, 0, 2], 8, true);
-		enemy.animations.play('move');
-        enemy.anchor.setTo(0.5, 0.5);
-        enemy.reset(game.width/2, 0);
-        enemy.body.gravity.y = 1000;
-        enemy.body.velocity.x = 150 * game.rnd.pick([-1, 1]);
-        enemy.body.bounce.x = 1;
-		enemy.body.bounce.y = .5;
-        enemy.checkWorldBounds = true;
-        enemy.outOfBoundsKill = true;
+			//set default properties for enemy
+			enemy.animations.add('move', [0, 1, 0, 2], 8, true);
+			enemy.animations.add('jump', [3], 0, true);
+			enemy.animations.add('fall', [4], 0, true);
+			enemy.animations.play('move');
+			enemy.anchor.setTo(0.5, 0.5);
+			enemy.reset(game.width/2, 0);
+			enemy.body.gravity.y = 1000;
+			enemy.body.velocity.x = game.rnd.pick([100, 150, 200,]) * game.rnd.pick([-1, 1]);
+			enemy.body.bounce.x = 1;
+			enemy.body.bounce.y = .5;
+			enemy.checkWorldBounds = true;
+			enemy.outOfBoundsKill = true;
+		}
     },
 
     createWorld: function() {
@@ -272,22 +388,24 @@ var playState = {
 
     playerDie: function(player, enemy) {
 		var playSound = false;
-		if(this.playerInvuln == false)
+		if(this.playerInvuln == false || player.inWorld == false)
 		{
 			//if the player fell out of the world ignore this section
 			if (enemy)
 			{
-				//throw the player away from the enemy as if it explodedand kill the enemy
-				var angle = game.math.angleBetweenPointsY(player.body.center, enemy.body.center);
+				//throw the player away from the enemy as if it exploded and kill the enemy
+				/* var angle = game.math.angleBetweenPointsY(player.body.center, enemy.body.center);
 				player.body.velocity.x -= Math.sin(angle) * 1080;
-				player.body.velocity.y -= Math.cos(angle) * 1080;
-				enemy.animations.play('die');
-				enemy.kill();
+				player.body.velocity.y -= Math.cos(angle) * 1080; */
+				//enemy.animations.play('die');
+				//enemy.kill();
 				//enemy.destroy();
 			}
+			this.pauseTil = game.time.now + 1500
+			game.physics.arcade.isPaused = true;
 			//set player invulnerability
 			this.playerInvuln = true;
-			this.invulnTil = game.time.now + 2500;
+			this.invulnTil = game.time.now + 4500;
 			player.tint = 0xFF0000;
 			
 			//add a death and decrement score (to a min of 0)
@@ -296,10 +414,6 @@ var playState = {
 			game.global.score = Math.max(0,game.global.score - 10);
 			this.scoreLabel.text = 'score: ' + game.global.score;
 			playSound = true;
-		}
-		//reset the player's position if he fell out of the world.
-        if(!this.player.inWorld) 
-		{
 			var inWall = false;
 			do
 			{
@@ -309,21 +423,21 @@ var playState = {
 				if (
 				((player.body.center.y > 200 && player.body.center.y < 280) && (player.body.center.x < 180 || player.body.center.x > 460)) || 
 				((player.body.center.x > 140 && player.body.center.x < 500) && ((player.body.center.y > 80 && player.body.center.y < 160) || (player.body.center.y > 320 && player.body.center.y < 400)))
-				)
+				) 
 				{
 					inWall = true;
 				}
 			}while (inWall);
 			playSound = true;
-		}
-		if(playSound)
-		{
-			// Set the position of the emitter on top of the player
-			this.emitter.x = this.player.x;
-			this.emitter.y = this.player.y;
-			// Start the emitter by exploding 15 particles that will live 800ms
-			this.emitter.start(true, 800, null, 15);
-			this.deadSound.play();
+			if(playSound)
+			{
+				// Set the position of the emitter on top of the player
+				this.emitter.x = this.player.x;
+				this.emitter.y = this.player.y;
+				// Start the emitter by exploding 15 particles that will live 800ms
+				this.emitter.start(true, 2800, null, 15);
+				this.deadSound.play();
+			}
 		}
     },
 };
