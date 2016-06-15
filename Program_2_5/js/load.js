@@ -8,7 +8,8 @@ var loadState = {
         progressBar.anchor.setTo(0.5, 0.5);
         game.load.setPreloadSprite(progressBar);
     
-        game.load.image('player', 'assets/player.png');
+        //game.load.image('player', 'assets/player.png');
+		game.load.spritesheet('player', 'assets/player_sheet.png', 32, 32);
         //game.load.image('enemy', 'assets/enemy.png');
 		game.load.spritesheet('enemy', 'assets/enemy_sheet.png', 32, 32);
         //game.load.image('coin', 'assets/coin.png');
