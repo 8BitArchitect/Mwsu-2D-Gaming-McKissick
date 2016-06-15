@@ -23,7 +23,9 @@ var playState = {
 
         this.createWorld();
 
-		//set default properties for the coin
+		//set default properties for the 'coin'
+		this.coinWeights = [5, 4, 3, 2, 1]
+		this.coinValues = [1, 3, 5, 10, 25];
         this.coin = game.add.sprite(-40, -40, 'ticket');
 		this.updateCoinPosition();
         game.physics.arcade.enable(this.coin); 
@@ -92,6 +94,9 @@ var playState = {
             this.playerDie(this.player);
         }
 		
+		//Enemy AI
+		this.enemies.forEachAlive(this.enemyAI, this, this.player)
+		
 		//update game timer
 		this.timeLeft=(120-Math.floor((game.time.now-this.startTime)/1000));
 		this.timeLabel.text = 'time left: ' + this.timeLeft;
@@ -116,6 +121,10 @@ var playState = {
             this.player.body.velocity.y = -560;
         }      
     },
+	
+	enemyAI: function(enemy, player) {
+		
+	},
 
     takeCoin: function(player, coin) {
 		this.coinSound.play();
@@ -143,12 +152,60 @@ var playState = {
             {x: 320, y: 420}, {x: 320, y:  80}
         ];
 		
-		var coinWeights = [0,0,0,0,0,0,1,1,1,1,2,2,2,3,3,4]
-		
-		var coinValues = [1, 3, 5, 10, 25];
-		
-		this.coin.frame = game.rnd.pick(coinWeights);
-		this.coin.value = coinValues[this.coin.frame];
+		var sum = [0,0,0,0,0];
+		sum[0] = this.coinWeights[0];
+		for(i = 1; i < 5; i++)
+		{
+			sum[i] = sum[i-1] + this.coinWeights[i]
+		}
+		var coinRnd = game.rnd.integerInRange(0, sum[4]-1);
+		if (coinRnd < sum[0] && sum[0])
+		{
+			this.coinWeights[0] -= 5;
+			this.coinWeights[1] += 4;
+			this.coinWeights[2] += 3;
+			this.coinWeights[3] += 2;
+			this.coinWeights[4] += 1;
+			this.coin.frame = 0;
+		}
+		else 		if (coinRnd < sum[1] && sum[1])
+		{
+			this.coinWeights[0] += 5;
+			this.coinWeights[1] -= 4;
+			this.coinWeights[2] += 3;
+			this.coinWeights[3] += 2;
+			this.coinWeights[4] += 1;
+			this.coin.frame = 1;
+		}
+		else 		if (coinRnd < sum[2] && sum[2])
+		{
+			this.coinWeights[0] += 5;
+			this.coinWeights[1] += 4;
+			this.coinWeights[2] -= 3;
+			this.coinWeights[3] += 2;
+			this.coinWeights[4] += 1;
+			this.coin.frame = 2;
+		}
+		else if (coinRnd < sum[3] && sum[3])
+		{
+			this.coinWeights[0] += 5;
+			this.coinWeights[1] += 4;
+			this.coinWeights[2] += 3;
+			this.coinWeights[3] -= 2;
+			this.coinWeights[4] += 1;
+			this.coin.frame = 3;
+		}
+		else
+		{
+			this.coinWeights[0] += 5;
+			this.coinWeights[1] += 4;
+			this.coinWeights[2] += 3;
+			this.coinWeights[3] += 2;
+			this.coinWeights[4] -= 1;
+			this.coin.frame = 4;
+		}
+		console.log(this.coinWeights);
+		this.coin.value = this.coinValues[this.coin.frame];
 
 		//??? removes current coin position from list ???
         for (var i = 0; i < coinPosition.length; i++) {
