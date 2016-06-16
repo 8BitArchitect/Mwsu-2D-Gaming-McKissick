@@ -7,7 +7,7 @@ var menuState = {
 		game.global.gameMusic.fadeTo(2000, .01);
 
         // Changed the y position to -50 so we don't see the label
-		var nameLabel = game.add.text(game.width/2, -50, 'Super Coin Box', { font: '50px Arial', fill: '#ffffff' });
+		var nameLabel = game.add.text(game.width/2, -50, 'Circus Clown Catastrophe', { font: '50px Arial', fill: '#ffffff' });
 		nameLabel.anchor.setTo(.5, .5);
 		
 		// Create a tween on the label
@@ -28,7 +28,16 @@ var menuState = {
 		var scoreLabel = game.add.text(game.width/2, game.height/2, text, { font: '25px Arial', fill: '#ffffff', align: 'center' });
 		scoreLabel.anchor.setTo(0.5, 0.5);
 
-        var startLabel = game.add.text(game.width/2, game.height-80, 'press the up arrow key to start', { font: '25px Arial', fill: '#ffffff' });
+        // Store the relevant text based on the device used
+		var text;
+		if (game.device.desktop) {
+			text = 'press the up arrow key to start';
+		}
+		else {
+			text = 'touch the screen to start';
+		}
+		// Display the text variable
+		var startLabel = game.add.text(game.width/2, game.height-80, text, { font: '25px Arial', fill: '#ffffff' });
         startLabel.anchor.setTo(0.5, 0.5);
 		
 		// Add the button that calls the 'toggleSound' function when pressed
@@ -47,8 +56,14 @@ var menuState = {
 		// Start the tween
 		tween.start();
 
-        var upKey = game.input.keyboard.addKey(Phaser.Keyboard.UP);
-        upKey.onDown.add(this.start, this);
+		if (!game.device.desktop) {
+			game.input.onDown.add(this.start, this);
+		}
+		else
+		{
+			var upKey = game.input.keyboard.addKey(Phaser.Keyboard.UP);
+			upKey.onDown.add(this.start, this);
+		}
     },
 	
 	update: function() {
@@ -88,6 +103,11 @@ var menuState = {
 	},
 
     start: function() {
+		// If we tap in the top left corner of the game on mobile
+		if (!game.device.desktop && game.input.y < 50 && game.input.x < 60) {
+			// It means we want to mute the game, so we don't start the game
+			return;
+		}
         game.state.start('play');   
     },
 };

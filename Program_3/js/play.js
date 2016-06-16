@@ -6,7 +6,7 @@ var playState = {
         this.cursor = game.input.keyboard.createCursorKeys();
         
 		//set default properties for the player
-        this.player = game.add.sprite(game.width/2, game.height/2, 'player');
+        this.player = game.add.sprite(game.width/2, game.height/2+20, 'player');
 		this.player.animations.add('none', [0], 0, true);
 		this.player.animations.add('right', [1], 0, true);
 		this.player.animations.add('left', [4], 0, true);
@@ -56,6 +56,10 @@ var playState = {
 		this.startTime = game.time.now;
 		this.timeLeft = 600;
 		
+		if (!game.device.desktop) {
+			this.addMobileInputs();
+		}
+		
 		//vars for player invuln state
 		this.playerInvuln = false;
 		this.invulnTil = 0;
@@ -85,6 +89,19 @@ var playState = {
 
 		// Use no gravity
 		this.emitter.gravity = 0;
+		
+		if (!game.device.dekstop) {
+			// Call 'orientationChange' when the device is rotated
+			game.scale.onOrientationChange.add(this.orientationChange, this);
+
+			// Create an empty label to write the error message if needed
+			this.rotateLabel = game.add.text(game.width/2, game.height/2, '',
+			{ font: '30px Arial', fill: '#fff', backgroundColor: '#000' });
+			this.rotateLabel.anchor.setTo(0.5, 0.5);
+
+			// Call the function at least once
+			this.orientationChange();
+		}
     },
 
     update: function() {
@@ -129,16 +146,82 @@ var playState = {
 			game.state.start('menu');
 		}
     },
+	
+	addMobileInputs: function() {
+		// Add the jump button
+		var jumpButton = game.add.sprite(490, 360, 'jumpButton');
+		jumpButton.inputEnabled = true;
+		jumpButton.alpha = 0.5;				
+		jumpButton.events.onInputDown.add(this.jumpPlayer, this);
+
+		// Movement variables
+		this.moveLeft = false;
+		this.moveRight = false;
+
+		// Add the move left button
+		var leftButton = game.add.sprite(50, 360, 'leftButton');
+		leftButton.inputEnabled = true;
+		leftButton.alpha = 0.5;
+		leftButton.events.onInputOver.add(this.setLeftTrue, this);
+		leftButton.events.onInputOut.add(this.setLeftFalse, this);
+		leftButton.events.onInputDown.add(this.setLeftTrue, this);
+		leftButton.events.onInputUp.add(this.setLeftFalse, this);
+
+		// Add the move right button
+		var rightButton = game.add.sprite(130, 360, 'rightButton');
+		rightButton.inputEnabled = true;
+		rightButton.alpha = 0.5;
+		rightButton.events.onInputOver.add(this.setRightTrue, this);
+		rightButton.events.onInputOut.add(this.setRightFalse, this);
+		rightButton.events.onInputDown.add(this.setRightTrue, this);
+		rightButton.events.onInputUp.add(this.setRightFalse, this);
+	},
+
+	// Basic functions that are used in our callbacks
+
+	setLeftTrue: function() {
+		this.moveLeft = true;
+	},
+	setLeftFalse: function() {
+		this.moveLeft = false;
+	},
+	setRightTrue: function() {
+		this.moveRight = true;
+	},
+	setRightFalse: function() {
+		this.moveRight = false;
+	},
+	
+	orientationChange: function() {
+		// If the game is in portrait (wrong orientation)
+		if (game.scale.isPortrait) {
+			// Pause the game and add a text explanation
+			game.paused = true;
+			this.rotateLabel.text = 'rotate your device in landscape';
+		}
+		// If the game is in landscape (good orientation)
+		else {
+			// Resume the game and remove the text
+			game.paused = false;
+			this.rotateLabel.text = '';
+		}
+	},
 
     movePlayer: function() {
+		if (game.input.totalActivePointers == 0) {
+			// Make sure the player is not moving
+			this.moveLeft = false;
+			this.moveRight = false;
+		}
+		
 		//move player left
-        if (this.cursor.left.isDown && this.player.body.velocity.x > -360) {
+        if ((this.cursor.left.isDown || this.moveLeft) && this.player.body.velocity.x > -360) {
             this.player.body.velocity.x = Math.max(-360,this.player.body.velocity.x-60);
 			this.playerFacing = 'left';
 			console.log(this.cursor.left.duration)
         }
 		//move player right
-        else if (this.cursor.right.isDown && this.player.body.velocity.x < 360) {
+        else if ((this.cursor.right.isDown || this.moveRight) && this.player.body.velocity.x < 360) {
             this.player.body.velocity.x = Math.min(360,this.player.body.velocity.x+60);
 			this.playerFacing = 'right';
 			console.log(this.cursor.right.duration)
@@ -147,13 +230,21 @@ var playState = {
         //if (this.cursor.up.isDown && this.player.body.touching.down)
 		if (this.cursor.up.isDown && this.player.body.onFloor())
 		{
+			this.jumpPlayer();
+        }      
+    },
+	
+	jumpPlayer: function() {
+		// If the player is touching the ground
+		if (this.player.body.onFloor()) {
+			// Jump with sound
 			if (game.physics.arcade.isPaused == false)
 			{
 				this.jumpSound.play();
 			}
-            this.player.body.velocity.y = -560;
-        }      
-    },
+			this.player.body.velocity.y = -560;
+		}
+	},
 	
 	animatePlayer: function() {
 		if (this.player.body.touching.down)
@@ -349,7 +440,7 @@ var playState = {
 			enemy.animations.add('fall', [4], 0, true);
 			enemy.animations.play('move');
 			enemy.anchor.setTo(0.5, 0.5);
-			enemy.reset(game.rnd.select([80, 320, 560]), 0);
+			enemy.reset(game.rnd.pick([80, 320, 560]), 0);
 			enemy.body.gravity.y = 1000;
 			enemy.body.velocity.x = game.rnd.pick([100, 150, 200,]) * game.rnd.pick([-1, 1]);
 			enemy.body.bounce.x = 1;
@@ -364,7 +455,7 @@ var playState = {
 		this.map = game.add.tilemap('level');
 
 		// Add the tileset to the map
-		this.map.addTilesetImage('walls');
+		this.map.addTilesetImage('tileset');
 
 		// Create the layer by specifying the name of the Tiled layer
 		this.layer = this.map.createLayer('Tile Layer 1');
@@ -404,20 +495,20 @@ var playState = {
 			game.global.score = Math.max(0,game.global.score - 10);
 			this.scoreLabel.text = 'score: ' + game.global.score;
 			playSound = true;
-			var inWall = false;
+			/* var inWall = false;
 			do
 			{
-				inWall = false
+				inWall = false */
 				this.player.reset(game.rnd.integerInRange(40,600),game.rnd.integerInRange(40,440));
 				//make sure we didn't spawn the player in a wall
-				if (
+				/* if (
 				((player.body.center.y > 200 && player.body.center.y < 280) && (player.body.center.x < 180 || player.body.center.x > 460)) || 
 				((player.body.center.x > 140 && player.body.center.x < 500) && ((player.body.center.y > 80 && player.body.center.y < 160) || (player.body.center.y > 320 && player.body.center.y < 400)))
 				) 
 				{
 					inWall = true;
 				}
-			}while (inWall);
+			}while (inWall); */
 			playSound = true;
 			if(playSound)
 			{

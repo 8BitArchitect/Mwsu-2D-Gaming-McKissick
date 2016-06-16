@@ -7,6 +7,10 @@ var loadState = {
         var progressBar = game.add.sprite(game.width/2, 200, 'progressBar');
         progressBar.anchor.setTo(0.5, 0.5);
         game.load.setPreloadSprite(progressBar);
+		
+		game.load.image('jumpButton', 'assets/jumpButton.png');
+		game.load.image('rightButton', 'assets/rightButton.png');
+		game.load.image('leftButton', 'assets/leftButton.png');
     
         //game.load.image('player', 'assets/player.png');
 		game.load.spritesheet('player', 'assets/player_sheet.png', 32, 32);
@@ -15,8 +19,8 @@ var loadState = {
         //game.load.image('coin', 'assets/coin.png');
 		game.load.spritesheet('ticket', 'assets/ticket_sheet.png', 32, 32);
 		// Load the tileset information
-		game.load.image('tileset', 'assets/wall.png');
-		game.load.tilemap('map', 'assets/level.json', null, Phaser.Tilemap.TILED_JSON);
+		game.load.image('tileset', 'assets/tileset.png');
+		game.load.tilemap('level', 'assets/level.json', null, Phaser.Tilemap.TILED_JSON);
         //game.load.image('wall', 'assets/wall.png');
         game.load.image('background', 'assets/background.png');
 		game.load.image('pixel', 'assets/pixel.png');
