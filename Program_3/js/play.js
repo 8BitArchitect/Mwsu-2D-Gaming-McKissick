@@ -90,9 +90,10 @@ var playState = {
     update: function() {
 		
 		//set which objects/groups can collide with each other
-        game.physics.arcade.collide(this.player, this.walls);
-        game.physics.arcade.collide(this.enemies, this.walls);
-		game.physics.arcade.collide(this.enemies, this.enemies);
+        // Replaced 'this.walls' by 'this.layer'
+		game.physics.arcade.collide(this.player, this.layer);
+		game.physics.arcade.collide(this.enemies, this.layer);
+		//game.physics.arcade.collide(this.enemies, this.enemies);
         game.physics.arcade.overlap(this.player, this.coin, this.takeCoin, null, this);
         game.physics.arcade.overlap(this.player, this.enemies, this.playerDie, null, this);
 		
@@ -117,7 +118,7 @@ var playState = {
         }
 		
 		//Enemy AI
-		this.enemies.forEachAlive(this.enemyAI, this, this.player);
+		//this.enemies.forEachAlive(this.enemyAI, this, this.player);
 		this.enemies.forEachAlive(this.enemyAnimate, this)
 		
 		//update game timer
@@ -143,7 +144,9 @@ var playState = {
 			console.log(this.cursor.right.duration)
         }
 		//make player jump
-        if (this.cursor.up.isDown && this.player.body.touching.down) {
+        //if (this.cursor.up.isDown && this.player.body.touching.down)
+		if (this.cursor.up.isDown && this.player.body.onFloor())
+		{
 			if (game.physics.arcade.isPaused == false)
 			{
 				this.jumpSound.play();
@@ -346,7 +349,7 @@ var playState = {
 			enemy.animations.add('fall', [4], 0, true);
 			enemy.animations.play('move');
 			enemy.anchor.setTo(0.5, 0.5);
-			enemy.reset(game.width/2, 0);
+			enemy.reset(game.rnd.select([80, 320, 560]), 0);
 			enemy.body.gravity.y = 1000;
 			enemy.body.velocity.x = game.rnd.pick([100, 150, 200,]) * game.rnd.pick([-1, 1]);
 			enemy.body.bounce.x = 1;
@@ -357,34 +360,21 @@ var playState = {
     },
 
     createWorld: function() {
-		//initialize and add the walls to the world
-        this.walls = game.add.group();
-        this.walls.enableBody = true;
-		
-		var left = game.add.sprite(0, 0, 'wall', 0, this.walls);
-		left.scale.setTo(1, 24);
-        var right = game.add.sprite(game.width-20, 0, 'wall', 0, this.walls);
-		right.scale.setTo(1, 24);
-        var topLeft = game.add.sprite(0, 0, 'wall', 0, this.walls);
-		topLeft.scale.setTo(12, 1);
-        var topRight = game.add.sprite(game.width-240, 0, 'wall', 0, this.walls);
-		topRight.scale.setTo(12, 1);
-        var bottomLeft = game.add.sprite(0, game.height-20, 'wall', 0, this.walls);
-		bottomLeft.scale.setTo(12, 1);
-        var bottomRight = game.add.sprite(game.width-240, game.height-20, 'wall', 0, this.walls);
-		bottomRight.scale.setTo(12, 1);
-        var middleLeft = game.add.sprite(0, game.height/2-10, 'wall', 0, this.walls);
-		middleLeft.scale.setTo(8, 1);
-        var middleRight = game.add.sprite(game.width*.75, game.height/2-10, 'wall', 0, this.walls);
-		middleRight.scale.setTo(8, 1);
-        var middleTop = game.add.sprite(game.width*.25, game.height*.25-10, 'wall', 0, this.walls);
-        middleTop.scale.setTo(16, 1);
-        var middleBottom = game.add.sprite(game.width*.25, game.height*.75-10, 'wall', 0, this.walls);
-        middleBottom.scale.setTo(16, 1);
+		// Create the tilemap
+		this.map = game.add.tilemap('level');
 
-		//prevent walls from moving in collisions
-        this.walls.setAll('body.immovable', true);
-    },
+		// Add the tileset to the map
+		this.map.addTilesetImage('walls');
+
+		// Create the layer by specifying the name of the Tiled layer
+		this.layer = this.map.createLayer('Tile Layer 1');
+
+		// Set the world size to match the size of the layer
+		this.layer.resizeWorld();
+
+		// Enable collisions for the first tilset element (the blue wall)
+		this.map.setCollision(1);
+	},
 
     playerDie: function(player, enemy) {
 		var playSound = false;
