@@ -23,7 +23,7 @@
          "imageheight":20,
          "imagewidth":40,
          "margin":0,
-         "name":"Tileset",
+         "name":"tileset",
          "spacing":0,
          "tilecount":2,
          "tileheight":20,
