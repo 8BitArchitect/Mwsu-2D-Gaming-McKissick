@@ -43,7 +43,8 @@ SpaceHipster.Game.prototype = {
 
     //  Our player ship
     player = this.game.add.sprite(this.game.world.centerX, this.game.world.centerY, 'ship');
-    player.anchor.set(0.5);
+    player.anchor.x = 0.5;
+	player.anchor.y = 0.5;
 	player.scale.setTo(0.5);
 
     //  and its physics settings
@@ -52,10 +53,14 @@ SpaceHipster.Game.prototype = {
 
     player.body.drag.set(100);
     player.body.maxVelocity.set(200);
+	player.body.offset.x = 16;
+	player.body.offset.y = 16;
+	player.body.width = 48;
+	player.body.height = 48;
 
     //  Game input
     cursors = this.game.input.keyboard.createCursorKeys();
-    this.game.input.keyboard.addKeyCapture([ Phaser.Keyboard.SPACEBAR ]);
+    this.game.input.keyboard.addKeyCapture([ Phaser.KeyCode.SPACEBAR, Phaser.KeyCode.D, Phaser.KeyCode.A ]);
 
     //player initial score of zero
     this.playerScore = 0;
@@ -91,8 +96,7 @@ SpaceHipster.Game.prototype = {
   render: function() {
 
     this.game.debug.body(player);
-	for (i = 0; i < 40; i++)
-		this.game.debug.body(bullets.children[i]);
+
   },
   
   generateCollectables: function() {
@@ -142,7 +146,7 @@ SpaceHipster.Game.prototype = {
     this.asteroids.enableBody = true;
 
     //phaser's random number generator
-    var numAsteroids = this.game.rnd.integerInRange(75 + this.diffMod - this.sizeMod/4, 100 + this.diffMod * 2 - this.sizeMod/2)
+    var numAsteroids = 10//this.game.rnd.integerInRange(75 + this.diffMod - this.sizeMod/4, 100 + this.diffMod * 2 - this.sizeMod/2)
     var asteroid;
 
     for (var i = 0; i < numAsteroids; i++) {
@@ -170,30 +174,38 @@ SpaceHipster.Game.prototype = {
 
         if (bullet)
         {
-            bullet.reset(player.body.x + 16, player.body.y + 16);
+            bullet.reset(player.centerY, player.centerY);
             bullet.lifespan = 4000;
             bullet.rotation = player.rotation;
             this.game.physics.arcade.velocityFromRotation(player.rotation, 400, bullet.body.velocity);
-            bulletTime = this.game.time.now + 150;
+            bulletTime = this.game.time.now + 200;
         }
     } 
 
   },
   playerMove: function()
   {
-	if (this.game.input.keyboard.isDown(Phaser.Keyboard.SPACEBAR))
+	var forwardAccel = new Phaser.Point();
+	var rightAccel = new Phaser.Point();
+	var leftAccel = new Phaser.Point();
+	if (this.game.input.keyboard.isDown(Phaser.KeyCode.SPACEBAR))
     {
         this.fireBullet();
     }
 	if (cursors.up.isDown)
     {
-        this.game.physics.arcade.accelerationFromRotation(player.rotation, 200, player.body.acceleration);
+        forwardAccel = this.game.physics.arcade.accelerationFromRotation(player.rotation, 300);
     }
-    else
+	if (this.game.input.keyboard.isDown(Phaser.KeyCode.D))
     {
-        player.body.acceleration.set(0);
+        rightAccel = this.game.physics.arcade.accelerationFromRotation(player.rotation + Math.PI/2, 150);
     }
-
+	else if (this.game.input.keyboard.isDown(Phaser.KeyCode.A))
+    {
+        leftAccel = this.game.physics.arcade.accelerationFromRotation(player.rotation - Math.PI/2, 150);
+    }
+	Phaser.Point.add(Phaser.Point.add(forwardAccel, leftAccel), rightAccel, player.body.acceleration);
+	
     if (cursors.left.isDown)
     {
         player.body.angularVelocity = -300;

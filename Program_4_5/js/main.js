@@ -1,6 +1,6 @@
 var SpaceHipster = SpaceHipster || {};
 
-SpaceHipster.game = new Phaser.Game(window.innerWidth, window.innerHeight, Phaser.AUTO, '');
+SpaceHipster.game = new Phaser.Game(window.innerWidth, window.innerHeight, Phaser.canvas, '');
 
 SpaceHipster.game.state.add('Boot', SpaceHipster.Boot);
 SpaceHipster.game.state.add('Preload', SpaceHipster.Preload);
