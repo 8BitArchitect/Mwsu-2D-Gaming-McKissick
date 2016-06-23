@@ -23,7 +23,7 @@
          "imageheight":64,
          "imagewidth":64,
          "margin":0,
-         "name":"BasicTiles",
+         "name":"tiles",
          "spacing":0,
          "tilecount":16,
          "tileheight":16,
