@@ -59,12 +59,12 @@ var mainState = {
 				map.putTile(13, originX, originY + roomHeight - 1, 'Tile Layer 1');
 				map.putTile(7, originX + roomWidth - 1, originY + roomHeight - 1, 'Tile Layer 1');
 				//tint
-				var color = game.add.sprite(originX * 16, originY * 16, 'square', 0);
-				color.scale.x = roomWidth;
-				color.scale.y = roomHeight;
+				/* var color = game.add.sprite(originX * 16, originY * 16, 'square', 0);
+				color.scale.x = roomWidth/16;
+				color.scale.y = roomHeight/16;
 				//color.frame = 0;
-				color.tint = game.rnd.pick([0xff0000,0xffff00,0xff00ff,0x00ff00,0x00ffff,0x0000ff]);
-				color.alpha = 0.5
+				color.tint = game.rnd.integerInRange(0, 0xffffff)
+				color.alpha = 0.5 */
 			}
 			else
 			{
