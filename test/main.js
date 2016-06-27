@@ -5,76 +5,431 @@ var mainState = {
 		game.load.image('tiles', 'BasicTiles.png');
 		game.load.image('square', 'square.png');
 		game.load.tilemap('blank', 'blank.json', null, Phaser.Tilemap.TILED_JSON);
+		game.load.tilemap('blank_small', 'blank_small.json', null, Phaser.Tilemap.TILED_JSON);
     },
 
     create: function()
-	{ 
+	{
+		this.graphics = game.add.graphics(0, 0);
+		this.graphics.beginFill(0xffff00, 1);
+		//this.graphics.lineStyle(1, 0x00ff00, 1);
         // Create the tilemap
-		this.map = game.add.tilemap('blank');
+		var mapResults = [];
+		mapResults = this.mapGen(32, 32, 4, 8, 3000, .45)
+		var data = this.makeCSV(mapResults[0], mapResults[1])
+		console.log(data)
+		game.cache.addTilemap('dynamicMap', null, data, Phaser.Tilemap.CSV);
+		this.map = game.add.tilemap('dynamicMap', 16, 16);
+		//this.map = game.add.tilemap('blank_small');
 		this.map.addTilesetImage('tiles');
-		this.layer = this.map.createLayer('Tile Layer 1');
+		this.layer = this.map.createLayer(0);
+		//this.layer.alpha = .5;
 		//this.map.fill(15, 0, 0, 64, 64, layer)
 
 		// Add the tileset to the map
 		
-		this.addRooms(this.map, 10000);
-		
+		//this.addRooms(this.map, 1000);
     },
 	
-	addRooms: function(map, maxFails)
+	
+	// mapGen() takes a floor size, minimum room size, maximum room size, and maximum number of failed attempts to add a room.
+	// optional parameters include target fill percentage (stop generation when this is met or a number of attempts are failed.)
+	
+	mapGen: function(floorX, floorY, roomMin, roomMax, maxFails, fillPct = 100)
 	{
-		var fails = 0;
-		while (fails < maxFails)
+		var level = new Array(floorX);
+		for (var i = 0; i < floorX; i++)
 		{
-			var roomWidth = Math.floor(Math.sqrt(this.rnd.integerInRange(9, 80)));
-			var roomHeight = Math.floor(Math.sqrt(this.rnd.integerInRange(9, 80)));
-			var originX = this.rnd.integerInRange(0, 64 - roomWidth);
-			var originY = this.rnd.integerInRange(0, 64 - roomHeight);
-			var bValid = true
-			for (i = originX; i < originX + roomWidth; i++)
+			//console.log("First loop");
+			level[i] = new Array(floorY);
+		}
+		for (var x = 0; x < floorX; x++)
+		{
+			//console.log("Second loop");
+			for (var y = 0; y < floorY; y++)
 			{
-				for (j = originY; j < originY + roomHeight; j++)
+				//console.log("Second loop first nest");
+				level[x][y] =
 				{
-					if (map.hasTile(i, j, 'Tile Layer 1'))
-					{
-						bValid = false;
-					}
+					region: 0,
+					walls: 0x0
 				}
 			}
-			if (bValid)
+		}
+		var failures = 0;
+		var region = 1;
+		var regions = [];
+		var tiles = 0;
+		var rooms = 0;
+		var pathData = [];
+		var room = new Phaser.Point(0,0);
+		var origin = new Phaser.Point(0,0);
+		do
+		{
+			//console.log("Third loop");
+			room.x = Math.floor(Math.sqrt(this.rnd.integerInRange(roomMin*roomMin, (roomMax+1)*(roomMax+1))));
+			room.y = Math.floor(Math.sqrt(this.rnd.integerInRange(roomMin*roomMin, (roomMax+1)*(roomMax+1))));
+			origin.x = this.rnd.integerInRange(0, floorX - room.x);
+			origin.y = this.rnd.integerInRange(0, floorY - room.y);
+			if (this.validRoom(level, origin, room))
 			{
-				//top row
-				map.fill(2, originX + 1, originY, roomWidth-2, 1, 'Tile Layer 1');
-				//bottom row
-				map.fill(5, originX + 1, originY + roomHeight - 1, roomWidth-2, 1, 'Tile Layer 1');
-				//right side
-				map.fill(9, originX, originY+1, 1, roomHeight-2, 'Tile Layer 1');
-				//left side
-				map.fill(3, originX + roomWidth - 1, originY+1, 1, roomHeight-2, 'Tile Layer 1');
-				//body
-				map.fill(1, originX+1, originY+1, roomWidth-2, roomHeight-2, 'Tile Layer 1');
-				//corners
-				map.putTile(10, originX, originY, 'Tile Layer 1');
-				map.putTile(4, originX + roomWidth - 1, originY, 'Tile Layer 1');
-				map.putTile(13, originX, originY + roomHeight - 1, 'Tile Layer 1');
-				map.putTile(7, originX + roomWidth - 1, originY + roomHeight - 1, 'Tile Layer 1');
-				//tint
-				/* var color = game.add.sprite(originX * 16, originY * 16, 'square', 0);
-				color.scale.x = roomWidth/16;
-				color.scale.y = roomHeight/16;
-				//color.frame = 0;
-				color.tint = game.rnd.integerInRange(0, 0xffffff)
-				color.alpha = 0.5 */
+				regions.push(region);
+				for (var x = origin.x; x < origin.x + room.x; x++)
+				{
+					//console.log("Third loop first nest");
+					for (var y = origin.y; y < origin.y + room.y; y++)
+					{
+						//console.log("Third loop second nest");
+						
+						level[x][y].region = region;
+						if (x == origin.x)
+						{
+							level[x][y].walls += 8;
+						}
+						else if (x == origin.x + room.x - 1)
+						{
+							level[x][y].walls += 2;
+						}
+						if (y == origin.y)
+						{
+							level[x][y].walls += 1;
+						}
+						else if (y == origin.y + room.y - 1)
+						{
+							level[x][y].walls += 4;
+						}
+					}
+				}
+				region++;
+				tiles += room.x * room.y;
 			}
 			else
 			{
-				fails++;
+				failures++;
+			}
+			if (tiles / (floorX * floorY) > fillPct)
+			{
+				rooms = regions.length;
+				pathData = this.pathGen(level, region, regions);
+				region = pathData[0];
+				regions = pathData[1];
+				console.log(regions);
+				this.doorGen(level, rooms, regions);
+				this.trimPaths(level);
+				return [level, rooms, regions];
+			}
+		}while(failures < maxFails);
+		rooms = regions.length;
+		pathData = this.pathGen(level, region, regions);
+		region = pathData[0];
+		regions = pathData[1];
+		console.log(regions);
+		this.doorgen(level, rooms, paths);
+		this.trimPaths(level);
+		return [level, rooms, regions];
+	},
+	
+	pathGen: function(level, region, regions)
+	{
+		//var stack[0] = {x: 0, y: 0, dirs: [1, 2, 4, 8], prev: 0};
+		var origin = new Phaser.Point();
+		while(this.emptyTiles(level))
+		{
+			do
+			{
+				origin.x = this.rnd.integerInRange(0, level.length - 1);
+				origin.y = this.rnd.integerInRange(0, level[0].length - 1);
+			}while (level[origin.x][origin.y].region != 0);
+			//this.graphics.moveTo((origin.x + .5) * 16, (origin.y + .5) * 16);
+			//this.graphics.drawCircle((origin.x + .5) * 16, (origin.y + .5) * 16, 8);
+			regions.push(region);
+			this.pathRecurse(level, region++, origin);
+		}
+		return [region, regions];
+	},
+	
+	pathRecurse: function(level, region, curr, prev = 0)
+	{
+		level[curr.x][curr.y].region = region;
+		var dirs = [1, 2, 4, 8];
+		var i = 0;
+		if (curr.x == 0)
+		{
+			i = dirs.indexOf(8);
+			dirs.splice(i, 1);
+			level[curr.x][curr.y].walls += 8;
+		}
+		else if (curr.x == level.length - 1)
+		{
+			i = dirs.indexOf(2);
+			dirs.splice(i, 1);
+			level[curr.x][curr.y].walls += 2;
+		}
+		if (curr.y == 0)
+		{
+			i = dirs.indexOf(1);
+			dirs.splice(i, 1);
+			level[curr.x][curr.y].walls += 1;
+		}
+		else if (curr.y == level[0].length - 1)
+		{
+			i = dirs.indexOf(4);
+			dirs.splice(i, 1);
+			level[curr.x][curr.y].walls += 4;
+		}
+		i = dirs.indexOf(prev);
+		if (i > -1)
+		{
+			dirs.splice(i, 1);
+		}
+		var next = new Phaser.Point();
+		while (dirs.length > 0)
+		{
+			next.x = curr.x;
+			next.y = curr.y;
+			var dir = this.rnd.pick(dirs);
+			i = dirs.indexOf(dir);
+			dirs.splice(i, 1);
+			switch (dir)
+			{
+			case 1:
+				next.y--;
+				break;
+			case 2:
+				next.x++;
+				break;
+			case 4:
+				next.y++;
+				break;
+			case 8:
+				next.x--;
+			}
+			if (level[next.x][next.y].region == 0)
+			{
+				//level[curr.x][curr.y].walls -= dir;
+				//this.graphics.moveTo((curr.x+.5)*16, (curr.y+.5)*16);  
+				//this.graphics.lineTo((next.x+.5)*16, (next.y+.5)*16);
+				this.pathRecurse(level, region, next, dir < 4 ? dir * 4 : dir / 4)
+			}
+			else
+			{
+				level[curr.x][curr.y].walls += dir;
 			}
 		}
+		//level[curr.x][curr.y].walls -= prev;		
+	},
+	
+	doorGen: function(level, rooms, regions)
+	{
+		//this.graphics.endFill();
+		//this.graphics.beginFill(0xffff00, 1);
+		origin = new Phaser.Point();
+		var connected = [];
+		var borders = [];
+		for (var x = 0; x < level.length; x++)
+		{
+			//console.log("Second loop");
+			for (var y = 0; y < level[0].length; y++)
+			{
+				var twalls = [];
+				if (x > 0 && level[x][y].region != level[x-1][y].region)
+				{
+					twalls.push(8);
+				}
+				if (x < level.length - 1 && level[x][y].region != level [x+1][y].region)
+				{
+					twalls.push(2);
+				}
+				if (y > 0 && level[x][y].region != level [x][y-1].region)
+				{
+					twalls.push(1);
+				}
+				if (y < level.length - 1 && level[x][y].region != level [x][y+1].region)
+				{
+					twalls.push(4);
+				}
+				twalls.sort();
+				if (twalls.length != 0)
+				{
+					var tx = x;
+					var ty = y;
+					borders.push({x: tx, y: ty, walls: twalls});
+				}
+			}
+		}
+		var origin = this.rnd.pick(borders);
+		connected.push(level[origin.x][origin.y].region)
+		do
+		{
+			var target = new Phaser.Point(origin.x, origin.y);
+			var dir = 0;
+			var i = connected.indexOf(level[origin.x][origin.y].region);
+			if (i > -1)
+			{
+				dir = game.rnd.pick(origin.walls);
+				switch (dir)
+				{
+				case 1:
+					target.y--;
+					break;
+				case 2:
+					target.x++;
+					break;
+				case 4:
+					target.y++;
+					break;
+				case 8:
+					target.x--;
+				}
+				if (connected.indexOf(level[target.x][target.y].region) < 0)
+				{
+					connected.push(level[target.x][target.y].region);
+					level[origin.x][origin.y].walls = level[origin.x][origin.y].walls & ~dir;
+					level[target.x][target.y].walls = level[target.x][target.y].walls & ~(dir < 4 ? dir * 4 : dir / 4);
+					var j = borders.indexOf(origin);
+					borders.splice(j, 1);
+				}
+				else if (this.rnd.realInRange(0,1) > .5)
+				{
+					level[origin.x][origin.y].walls = level[origin.x][origin.y].walls & ~dir;
+					level[target.x][target.y].walls = level[target.x][target.y].walls & ~(dir < 4 ? dir * 4 : dir / 4);
+					var j = borders.indexOf(origin);
+					borders.splice(j, 1);
+				}
+			}
+			origin = this.rnd.pick(borders);
+			console.log("waiting for final connection");
+		}while (connected.length < regions.length);
+	},
+	
+	trimPaths(level)
+	{
+		var deadEnds = [];
+		for (var x = 0; x < level.length; x++)
+		{
+			for (var y = 0; y < level[0].length; y++)
+			{
+				switch (~level[x][y].walls & 0xf)
+				{
+				case 1:
+				case 2:
+				case 4:
+				case 8:
+					deadEnds.push(new Phaser.Point(x, y));
+				}
+			}
+		}
+		while (deadEnds.length > 0)
+		{
+			path = deadEnds.pop();
+			switch (~level[path.x][path.y].walls & 0xf)
+			{
+			case 1:
+				level[path.x][path.y - 1].walls += 4;
+				switch (~level[path.x][path.y - 1].walls & 0xf)
+				{
+				case 1:
+				case 2:
+				case 4:
+				case 8:
+					deadEnds.push(new Phaser.Point(path.x, path.y - 1));
+				}
+				break;
+			case 2:
+				level[path.x + 1][path.y].walls += 8;
+				switch (~level[path.x + 1][path.y].walls & 0xf)
+				{
+				case 1:
+				case 2:
+				case 4:
+				case 8:
+					deadEnds.push(new Phaser.Point(path.x + 1, path.y));
+				}
+				break;
+			case 4:
+				level[path.x][path.y + 1].walls += 1;
+				switch (~level[path.x][path.y + 1].walls & 0xf)
+				{
+				case 1:
+				case 2:
+				case 4:
+				case 8:
+					deadEnds.push(new Phaser.Point(path.x, path.y + 1));
+				}
+				break;
+			case 8:
+				level[path.x - 1][path.y].walls += 2;
+				switch (~level[path.x - 1][path.y].walls & 0xf)
+				{
+				case 1:
+				case 2:
+				case 4:
+				case 8:
+					deadEnds.push(new Phaser.Point(path.x - 1, path.y));
+				}
+			}
+			level[path.x][path.y].walls = 0;
+			level[path.x][path.y].region = 0;
+		}
+	},
+	
+	emptyTiles: function(level)
+	{
+		for (var x = 0; x < level.length; x++)
+		{
+			for (var y = 0; y < level[0].length; y++)
+			{
+				if (level[x][y].region == 0)
+				{
+					return true;
+				}
+			}
+		}
+		return false;
+	},
+	
+	validRoom: function(level, origin, room)
+	{
+		for (var x = origin.x; x < origin.x + room.x; x++)
+		{
+			for (var y = origin.y; y < origin.y + room.y; y++)
+			{
+				if (level[x][y].region != 0)
+				{
+					return false;
+				}
+			}
+		}
+		return true;
+	},
+	
+	makeCSV: function(level, rooms)
+	{
+		var levelCSV = '';
+
+		for (var y = 0; y < level[0].length; y++)
+		{
+			for (var x = 0; x < level.length; x++)
+			{
+				levelCSV += (level[x][y].walls || level[x][y].region <= rooms) ? level[x][y].walls.toString() : '15';
+
+				if (x < level.length)
+				{
+					levelCSV += ',';
+				}
+			}
+
+			if (y < level[0].length)
+			{
+				levelCSV += "\n";
+			}
+		}
+		
+		return levelCSV;
 	}
 };
 
 //start the game
-var game = new Phaser.Game(1024, 1024, Phaser.AUTO, 'gameDiv');
+var game = new Phaser.Game(512, 512, Phaser.AUTO, 'gameDiv');
 game.state.add('main', mainState);
 game.state.start('main');
