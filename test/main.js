@@ -15,9 +15,9 @@ var mainState = {
 		//this.graphics.lineStyle(1, 0x00ff00, 1);
         // Create the tilemap
 		var mapResults = [];
-		mapResults = this.mapGen(32, 32, 4, 8, 3000, .45)
-		var data = this.makeCSV(mapResults[0], mapResults[1])
-		console.log(data)
+		mapResults = this.mapGen(32, 32, 4, 8, 3000, this.rnd.realInRange(.25, .9));
+		var data = this.makeCSV(mapResults[0], mapResults[1]);
+		console.log(data);
 		game.cache.addTilemap('dynamicMap', null, data, Phaser.Tilemap.CSV);
 		this.map = game.add.tilemap('dynamicMap', 16, 16);
 		//this.map = game.add.tilemap('blank_small');
@@ -124,7 +124,7 @@ var mainState = {
 		region = pathData[0];
 		regions = pathData[1];
 		console.log(regions);
-		this.doorgen(level, rooms, paths);
+		this.doorGen(level, rooms, regions);
 		this.trimPaths(level);
 		return [level, rooms, regions];
 	},
@@ -411,7 +411,7 @@ var mainState = {
 		{
 			for (var x = 0; x < level.length; x++)
 			{
-				levelCSV += (level[x][y].walls || level[x][y].region <= rooms) ? level[x][y].walls.toString() : '15';
+				levelCSV += level[x][y].region ? level[x][y].walls.toString() : '15';
 
 				if (x < level.length)
 				{
