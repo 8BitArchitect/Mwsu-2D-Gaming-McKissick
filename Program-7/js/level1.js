@@ -1,4 +1,4 @@
-var playState = {
+var level1State = {
 
     create: function() { 
 		game.global.menuMusic.fadeTo(2000, .01);
@@ -46,15 +46,15 @@ var playState = {
         this.coin.anchor.setTo(0.5, 0.5);
 
 		//add labels
-        this.scoreLabel = game.add.text(30, 30, 'score: 0', { font: '18px Arial', fill: '#ffffff' });
-        game.global.score = 0;
+        this.scoreLabel = game.add.text(30, 30, 'score: ' + game.global.score, { font: '18px Arial', fill: '#ffffff' });
+        //game.global.score = 0;
 		
-		this.deathsLabel = game.add.text(530, 430, 'deaths: 0', { font: '18px Arial', fill: '#ffffff' });
-        this.deaths = 0;
+		/* this.deathsLabel = game.add.text(530, 430, 'deaths: 0', { font: '18px Arial', fill: '#ffffff' });
+        this.deaths = 0; */
 		
-		this.timeLabel = game.add.text(420, 30, 'time left: 120', { font: '18px Arial', fill: '#ffffff' });
+		/* this.timeLabel = game.add.text(420, 30, 'time left: 120', { font: '18px Arial', fill: '#ffffff' });
 		this.startTime = game.time.now;
-		this.timeLeft = 600;
+		this.timeLeft = 600; */
 		
 		if (!game.device.desktop) {
 			this.addMobileInputs();
@@ -112,7 +112,8 @@ var playState = {
 		game.physics.arcade.collide(this.enemies, this.layer);
 		//game.physics.arcade.collide(this.enemies, this.enemies);
         game.physics.arcade.overlap(this.player, this.coin, this.takeCoin, null, this);
-        game.physics.arcade.overlap(this.player, this.enemies, this.playerDie, null, this);
+        //game.physics.arcade.overlap(this.player, this.enemies, this.playerDie, null, this);
+		game.physics.arcade.overlap(this.player, this.enemies, this.endGame, null, this);
 		
 		//check if player invulnerability should be reset
 		if (this.playerInvuln && game.time.now > this.invulnTil)
@@ -131,7 +132,7 @@ var playState = {
 
 		//check if player has left the world
         if (!this.player.inWorld) {
-            this.playerDie(this.player);
+            game.state.start('level2');
         }
 		
 		//Enemy AI
@@ -139,12 +140,12 @@ var playState = {
 		this.enemies.forEachAlive(this.enemyAnimate, this)
 		
 		//update game timer
-		this.timeLeft=(600-Math.floor((game.time.now-this.startTime)/1000));
+		/* this.timeLeft=(600-Math.floor((game.time.now-this.startTime)/1000));
 		this.timeLabel.text = 'time left: ' + this.timeLeft;
 		if (this.timeLeft<0)
 		{
 			game.state.start('menu');
-		}
+		} */
     },
 	
 	addMobileInputs: function() {
@@ -452,7 +453,7 @@ var playState = {
 
     createWorld: function() {
 		// Create the tilemap
-		this.map = game.add.tilemap('level');
+		this.map = game.add.tilemap('level1');
 
 		// Add the tileset to the map
 		this.map.addTilesetImage('tileset');
@@ -521,4 +522,9 @@ var playState = {
 			}
 		}
     },
+	
+	endGame: function(player, enemy)
+	{
+		game.state.start('menu');
+	}
 };

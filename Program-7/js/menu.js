@@ -108,6 +108,7 @@ var menuState = {
 			// It means we want to mute the game, so we don't start the game
 			return;
 		}
-        game.state.start('play');   
+		game.global.score = 0;
+        game.state.start('level1');   
     },
 };

@@ -20,7 +20,8 @@ var loadState = {
 		game.load.spritesheet('ticket', 'assets/ticket_sheet.png', 32, 32);
 		// Load the tileset information
 		game.load.image('tileset', 'assets/tileset.png');
-		game.load.tilemap('level', 'assets/level.json', null, Phaser.Tilemap.TILED_JSON);
+		game.load.tilemap('level1', 'assets/level1.json', null, Phaser.Tilemap.TILED_JSON);
+		game.load.tilemap('level2', 'assets/level2.json', null, Phaser.Tilemap.TILED_JSON);
         //game.load.image('wall', 'assets/wall.png');
         game.load.image('background', 'assets/background.png');
 		game.load.image('pixel', 'assets/pixel.png');
